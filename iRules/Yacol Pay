@@ -1,0 +1,107 @@
+when RULE_INIT {
+    set static::conct 10
+###Set The Max Connections For Each Account### 
+    set static::timeot 60
+###Set The Max Transaction Timeout Period###
+    set static::acct_num_qry [class size Class_Query_Account]
+###Set The Max Number Of Query Accounts###
+    set static::acct_num_pmt [class size Class_Payment_Account]
+###Set The Max Number Of Payment Accounts###
+}
+
+when HTTP_REQUEST {
+    set decrease 0
+###Set A Pointer For Count Connections###
+    HTTP::collect [HTTP::header "Content-Length"]
+}
+
+when HTTP_REQUEST_DATA {
+    if { [class match [HTTP::payload] contains "Class_Query"] }{
+###        set trsct_num [findstr [HTTP::payload] "<YURREF>" 0 "</YURREF>"]
+###        log local5.info "@$trsct_num@"
+        for {set pointer 1}{$pointer <= $static::acct_num_qry}{incr pointer}{
+            set rplc_inf [class match -value $pointer equals Class_Query_Account]
+            set rplc_nam [getfield $rplc_inf "@" 1]
+            set des_serv [getfield $rplc_inf "@" 2]
+            if { [table lookup -notouch -subtable "LGNNAM_1" $rplc_nam] == "" }{
+                table set -subtable "LGNNAM_1" $rplc_nam 1 $static::timeot indefinite
+                set o_lgnnam [findstr [HTTP::payload] "<LGNNAM>" 0 "</LGNNAM>"]
+                set n_lgnnam "<LGNNAM>$rplc_nam"
+                set o_length [string length $o_lgnnam]
+                set n_length [string length $n_lgnnam]
+                set l_index [string last $o_lgnnam [HTTP::payload]]
+                for {set o_index 0}{$o_index < $l_index}{incr o_index $n_length}{
+                    set o_index [string first $o_lgnnam [HTTP::payload] $o_index]
+                    HTTP::payload replace $o_index $o_length $n_lgnnam
+                }
+                pool Pool_Payment_Query member $des_serv
+                set decrease 1
+                break
+            }
+            elseif { [table lookup -notouch -subtable "LGNNAM_1" $rplc_nam] < $static::conct }{
+                table incr -subtable "LGNNAM_1" $rplc_nam
+                set o_lgnnam [findstr [HTTP::payload] "<LGNNAM>" 0 "</LGNNAM>"]
+                set n_lgnnam "<LGNNAM>$rplc_nam"
+                set o_length [string length $o_lgnnam]
+                set n_length [string length $n_lgnnam]
+                set l_index [string last $o_lgnnam [HTTP::payload]]
+                for {set o_index 0}{$o_index < $l_index}{incr o_index $n_length}{
+                    set o_index [string first $o_lgnnam [HTTP::payload] $o_index]
+                    HTTP::payload replace $o_index $o_length $n_lgnnam
+                }
+                pool Pool_Payment_Query member $des_serv
+                set decrease 1
+                break
+            }
+        }
+###        log local5.info "Type Query @ $trsct_num @ Replace Account is $n_lgnnam"
+        HTTP::release
+    }
+    elseif { [class match [HTTP::payload] contains "Class_Payment"] }{
+###        set trsct_num [findstr [HTTP::payload] "<YURREF>" 0 "</YURREF>"]
+        for {set pointer 1}{$pointer <= $static::acct_num_pmt}{incr pointer}{
+            set rplc_inf [class match -value $pointer equals Class_Payment_Account]
+            set rplc_nam [getfield $rplc_inf "@" 1]
+            set des_serv [getfield $rplc_inf "@" 2]
+            if { [table lookup -notouch -subtable "LGNNAM_1" $rplc_nam] == "" }{
+                table set -subtable "LGNNAM_1" $rplc_nam 1 $static::timeot indefinite
+                set o_lgnnam [findstr [HTTP::payload] "<LGNNAM>" 0 "</LGNNAM>"]
+                set n_lgnnam "<LGNNAM>$rplc_nam"
+                set o_length [string length $o_lgnnam]
+                set n_length [string length $n_lgnnam]
+                set l_index [string last $o_lgnnam [HTTP::payload]]
+                for {set o_index 0}{$o_index < $l_index}{incr o_index $n_length}{
+                    set o_index [string first $o_lgnnam [HTTP::payload] $o_index]
+                    HTTP::payload replace $o_index $o_length $n_lgnnam
+                }
+                pool Pool_Payment_Query member $des_serv
+                set decrease 1
+                break
+            }
+            elseif { [table lookup -notouch -subtable "LGNNAM_1" $rplc_nam] < $static::conct }{
+                table incr -subtable "LGNNAM_1" $rplc_nam
+                set o_lgnnam [findstr [HTTP::payload] "<LGNNAM>" 0 "</LGNNAM>"]
+                set n_lgnnam "<LGNNAM>$rplc_nam"
+                set o_length [string length $o_lgnnam]
+                set n_length [string length $n_lgnnam]
+                set l_index [string last $o_lgnnam [HTTP::payload]]
+                for {set o_index 0}{$o_index < $l_index}{incr o_index $n_length}{
+                    set o_index [string first $o_lgnnam [HTTP::payload] $o_index]
+                    HTTP::payload replace $o_index $o_length $n_lgnnam
+                }
+                pool Pool_Payment_Query member $des_serv
+                set decrease 1
+                break
+            }
+        }
+###        log local5.info "Type Payment @ $trsct_num @ Replace Account is $n_lgnnam"
+        HTTP::release
+    }
+}
+
+when SERVER_CLOSED {
+    if { $decrease == 1 }{
+###        log local5.info "Transaction End @ $trsct_num"
+        table incr -subtable "LGNNAM_1" [substr $n_lgnnam 8] -1
+    }
+}
