@@ -1,0 +1,19 @@
+when HTTP_REQUEST {
+	set rqst_time "[clock format [clock seconds] -format "%d/%b/%Y:%H:%M:%S %z"]"
+	set c_addr "[IP::client_addr]"
+	set vs_addr "[IP::local_addr]"
+	set url "[HTTP::host][HTTP::uri]"
+}
+
+when SERVER_CONNECTED {
+	set snat_addr "[IP::local_addr]"
+	set s_addr "[IP::remote_addr]"
+}
+
+when HTTP_RESPONSE {
+	set rsps_time "[clock format [clock seconds] -format "%d/%b/%Y:%H:%M:%S %z"]"
+	set s_code "[HTTP::status]"
+	log 10.100.67.61 local5.info "****************************************"
+        log 10.100.67.61 local5.info "Srt_Time $rqst_time Src_Ip $c_addr Vs_Ip $vs_addr URL $url  Snat_Ip $snat_addr Backend_Ip $s_addr Rsp_Time $rsps_time Status $s_code"
+	log 10.100.67.61 local5.info "****************************************"
+}
