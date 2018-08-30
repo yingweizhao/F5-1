@@ -1,0 +1,2 @@
+ansible <inventory> -m ping #需要提前定义好inventory的密钥或者用户名口令。
+ansible <inventory> -m ping -k #需要输入ssh口令，inventory中不指定用户名的话，默认使用root账户。
