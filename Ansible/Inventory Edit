@@ -1,4 +1,4 @@
-vi /etc/ansible/hosts
+vi /etc/ansible/hosts #hosts为inventory默认使用文件，可以在执行ansible命令时使用-i参数指定目录/文件。
 
 ## 192.168.100.10
 # This is the default ansible 'hosts' file.
