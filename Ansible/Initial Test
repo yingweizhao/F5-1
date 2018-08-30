@@ -1,2 +1,3 @@
 ansible <inventory> -m ping #需要提前定义好inventory的密钥或者用户名口令。
 ansible <inventory> -m ping -k #需要输入ssh口令，inventory中不指定用户名的话，默认使用root账户。
+ansible <inventory> -m command -a "<command>" #执行<command>命令。e.g., ansible hosts -m command -a "tmsh show sys connection"
