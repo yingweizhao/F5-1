@@ -1,1 +1,11 @@
-a
+- name: 
+  hosts: 
+  connection: 
+ 
+  tasks:
+      - name: 
+        bigip_facts:
+            server: "{{ inventory_hostname }}"
+            user: "admin"
+            password: "admin"
+            include: "system_info"
