@@ -1,0 +1,166 @@
+when CLIENT_ACCEPTED {
+	set c_num 0
+	LB::context_id jjyh
+	set ippos [IP::client_addr]
+	LB::prime
+	TCP::collect
+}
+
+when CLIENT_DATA {
+	if {[TCP::payload] equals "0000" } {
+		if { [active_members [LB::server pool]] < 1} {
+			reject
+		}
+		else {
+			TCP::payload replace 0 4 ""
+			foreach am [active_members -list [LB::server pool]] {
+				TCP::payload replace 0 0 "0000"
+				pool [LB::server pool] member [lindex $am 0] [lindex $am 1]
+				TCP::release 4
+				TCP::notify eom
+			}
+		}
+	}
+	else {
+		while {[TCP::payload length] > 46 } {
+			set c_num [expr { $c_num + 1 }]
+			log local5.info "QZtoYL count $c_num"
+			binary scan [TCP::payload] H* payloadhex
+			binary scan [TCP::payload] B* payloadbit
+			set tcplen [TCP::payload length]
+			set asciipayload [binary format B* $payloadbit]	
+			set bitVal_msg [substr $payloadbit 0 32]
+			set len_msg [binary format B* $bitVal_msg]
+			set nlen_msg [expr {[expr {[substr $len_msg 0 1] * 1000}] + [expr {[substr $len_msg 1 1] * 100}] + [expr {[substr $len_msg 2 1] * 10}] + [expr {[substr $len_msg 3 1]}]}]
+			set nnlen_msg [expr { $nlen_msg + 4} ]
+			if { $tcplen < $nnlen_msg} {
+				log local5.info  "@payload length is $tcplen, not finish yet, continue to collect ..."
+				return
+			}
+			set toffset 32
+			set lenMaybeSN 368
+			set lenField1 32
+			set map1bit [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 }] 1]
+			if { $map1bit == 1 } {
+				set offset 128
+			}
+			elseif { $map1bit == 0 } {
+				set offset 64
+			}
+			set map1str [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 }] 33]
+			set moffset 0
+			if { [substr $map1str 1 1] == 1 } {
+				set field2 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset }] 16]
+				set lenf2 [binary format B* $field2]
+				set nlenf2 [expr {[expr {[substr $lenf2 0 1] * 10}] + [substr $lenf2 1 1]}]		
+				incr moffset [expr { $nlenf2 * 8 }]
+				incr moffset 16
+			}
+			if { [substr $map1str 2 1] == 1 } {
+				incr moffset 48
+			}
+			if { [substr $map1str 3 1] == 1 } {
+				incr moffset 96
+			}
+			if { [substr $map1str 4 1] == 1 } {
+				incr moffset 96
+			}
+			if { [substr $map1str 5 1] == 1 } {
+				incr moffset 96
+			}
+			if { [substr $map1str 6 1] == 1 } {
+				set field7 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 80]
+				incr moffset 80
+			}
+			if { [substr $map1str 8 1] == 1 } {
+				incr moffset 64
+			}
+			if { [substr $map1str 9 1] == 1 } {
+				incr moffset 64
+			}
+			if { [substr $map1str 10 1] == 1 } {
+				set field11 [substr $payloadbit [expr { $toffset + $lenMaybeSN +  $lenField1 + $offset + $moffset }] 48]
+				incr moffset 48
+			}
+			if { [substr $map1str 11 1] == 1 } {
+				incr moffset 48
+			}
+			if { [substr $map1str 12 1] == 1 } {
+				incr moffset 32
+			}
+			if { [substr $map1str 13 1] == 1 } {
+				incr moffset 32
+			}
+			if { [substr $map1str 14 1] == 1 } {
+				incr moffset 32
+			}
+			if { [substr $map1str 15 1] == 1 } {
+				set field16 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 32]	
+				incr moffset 32   
+			}	
+			if { [substr $map1str 17 1] == 1 } {
+				incr moffset 32
+			}
+			if { [substr $map1str 18 1] == 1 } {
+				incr moffset 24
+			}
+			if { [substr $map1str 21 1] == 1 } {
+				incr moffset 24
+			}
+			if { [substr $map1str 22 1] == 1 } {
+				incr moffset 24
+			}
+			if { [substr $map1str 24 1] == 1 } {
+				set field25 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 16]
+				incr moffset 16
+			}
+			if { [substr $map1str 25 1] == 1 } {
+				incr moffset 16
+			}	
+			if { [substr $map1str 27 1] == 1 } {
+				set field28 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 72]
+				incr moffset 72
+			}
+			if { [substr $map1str 31 1] == 1 } {
+				set field32len [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 16]
+				set lenf32 [binary format B* $field32len]
+				set nlenf32 [expr {[expr {[substr $lenf32 0 1] * 10}] + [substr $lenf32 1 1]}]
+				set field32 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset + 16 }] [expr { $nlenf32 * 8 }]]
+				incr moffset [expr { $nlenf32 * 8 }]
+				incr moffset 16
+			}
+			if { [substr $map1str 32 1] == 1 } {
+				set field33len [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset }] 16]
+				set lenf33 [binary format B* $field33len]
+				set nlenf33 [expr {[expr {[substr $lenf33 0 1] * 10}] + [substr $lenf33 1 1]}]
+				set field33 [substr $payloadbit [expr { $toffset + $lenMaybeSN + $lenField1 + $offset + $moffset +16 }] [expr { $nlenf33 * 8} ]]
+				incr moffset [expr { $nlenf33 * 8 }]
+				incr moffset 16
+			}
+			set ascii7 [binary format B* $field7]
+			set ascii11 [binary format B* $field11]
+			set ascii32 [binary format B* $field32]
+#			set ascii33 [binary format B* $field33]
+			set tkey "$ascii7$ascii11$ascii32"
+			set JJtable [table lookup -subtable "JJBank" -notouch $tkey]
+			if { $JJtable eq "10.15.5.223" } {
+				pool Pool_Test_QZ_YL member $JJtable
+			}
+			elseif { $JJtable eq "10.15.5.223" } {
+				pool Pool_Test_QZ_YL member $JJtable
+			}
+			else {
+				table set -subtable "JJBank" $tkey $ippos 60 60
+			}
+			LB::src_tag $tkey
+			TCP::release $nnlen_msg
+			TCP::notify eom
+		}
+	}
+	TCP::collect
+}
+
+when LB_FAILED {
+	log local5.err "@lb_failed@QZ_YL"
+	LB::reselect
+}
