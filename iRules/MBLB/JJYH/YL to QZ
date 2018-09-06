@@ -23,8 +23,6 @@ when CLIENT_DATA {
 	}
 	else {
 		while {[TCP::payload length] > 46 } {
-			set c_num [expr { $c_num + 1 }]
-			log local5.info "YLtoQZ count $c_num"
 			binary scan [TCP::payload] H* payloadhex
 			binary scan [TCP::payload] B* payloadbit
 			set tcplen [TCP::payload length]
@@ -143,14 +141,16 @@ when CLIENT_DATA {
 #			set ascii33 [binary format B* $field33]
 			set tkey "$ascii7$ascii11$ascii32"
 			set JJtable [table lookup -subtable "JJBank" -notouch $tkey]
-				if { $JJtable ne "" } {
-					pool Pool_Test_YL_QZ member $JJtable
-				}
-				else {
-					table set -subtable "JJBank" $tkey $ippos 60 60
-				}
+			if { $JJtable ne "" } {
+				pool Pool_Test_YL_QZ member $JJtable
+			}
+			else {
+				table set -subtable "JJBank" $tkey $ippos 60 60
+			}
 			LB::src_tag $tkey
 			TCP::release $nnlen_msg
+			set c_num [expr { $c_num + 1 }]
+			log local5.info "YLtoQZ count $c_num"
 			TCP::notify eom
 		}
 	}
