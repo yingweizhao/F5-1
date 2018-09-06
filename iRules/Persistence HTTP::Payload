@@ -1,0 +1,13 @@
+when HTTP_RESPONSE {
+    HTTP::collect
+}
+ 
+when HTTP_RESPONSE_DATA {
+    log local5.info "All Payload::::[HTTP::payload]"
+    if { [HTTP::payload] contains "EMP_SID" }{
+        log local5.info "Persist EMP_SID value is [findstr [HTTP::payload]
+"EMP_SID" 6 "/EMP_SID"]"
+        #persist uie [findstr [HTTP::payload] "EMP_SID" 6 "/EMP_SID"]
+    }
+    HTTP::release
+}
