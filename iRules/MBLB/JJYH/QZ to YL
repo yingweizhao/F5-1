@@ -23,8 +23,6 @@ when CLIENT_DATA {
 	}
 	else {
 		while {[TCP::payload length] > 46 } {
-			set c_num [expr { $c_num + 1 }]
-			log local5.info "QZtoYL count $c_num"
 			binary scan [TCP::payload] H* payloadhex
 			binary scan [TCP::payload] B* payloadbit
 			set tcplen [TCP::payload length]
@@ -154,6 +152,8 @@ when CLIENT_DATA {
 			}
 			LB::src_tag $tkey
 			TCP::release $nnlen_msg
+			set c_num [expr { $c_num + 1 }]
+			log local5.info "QZtoYL count $c_num"
 			TCP::notify eom
 		}
 	}
