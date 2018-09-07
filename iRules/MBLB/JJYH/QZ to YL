@@ -1,6 +1,8 @@
 when CLIENT_ACCEPTED {
 	set c_num 0
 	LB::context_id jjyh
+	set dtcport [TCP::local_port]
+	set stcport [TCP::remote_port]
 	set ippos [IP::client_addr]
 	LB::prime
 	TCP::collect
@@ -142,18 +144,20 @@ when CLIENT_DATA {
 			set tkey "$ascii7$ascii11$ascii32"
 			set JJtable [table lookup -subtable "JJBank" -notouch $tkey]
 			if { $JJtable eq "10.15.5.223" } {
-				pool Pool_Test_QZ_YL member $JJtable
-			}
-			elseif { $JJtable eq "10.15.5.223" } {
-				pool Pool_Test_QZ_YL member $JJtable
+				log local5.info "QZtoYL member ::: $JJtable"
+				pool Pool_Test_QZ_YL
 			}
 			else {
 				table set -subtable "JJBank" $tkey $ippos 60 60
 			}
+#			elseif { $JJtable eq "10.15.5.223" } {
+#				log local5.info "QZtoYL member ::: $JJtable"
+#				pool Pool_Test_QZ_YL member $JJtable
+#			}
 			LB::src_tag $tkey
 			TCP::release $nnlen_msg
 			set c_num [expr { $c_num + 1 }]
-			log local5.info "QZtoYL count $c_num"
+			log local5.info "From Port $stcport to $dtcport ::: QZtoYL count $c_num"
 			TCP::notify eom
 		}
 	}
