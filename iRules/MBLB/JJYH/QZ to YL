@@ -150,7 +150,7 @@ when CLIENT_DATA {
 			else {
 				table set -subtable "JJBank" $tkey $ippos 60 60
 			}
-#			elseif { $JJtable eq "10.15.5.223" } {
+#			if { $JJtable eq "10.15.5.223" } {
 #				log local5.info "QZtoYL member ::: $JJtable"
 #				pool Pool_Test_QZ_YL member $JJtable
 #			}
