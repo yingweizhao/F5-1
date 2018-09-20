@@ -2,25 +2,22 @@ when HTTP_REQUEST {
     HTTP::collect [HTTP::header value Content-Length]
 }
 when HTTP_REQUEST_DATA {
-    log og local5.info "Al "All Payload::::[HTTP::payload]"
-    log og local5.info "tr "trancode: [findstr [HTTP::payload] "tranCode" 9 "&"]"
+    #log local5.info "All Payload::::[HTTP::payload]"
+    #log local5.info "trancode: [findstr [HTTP::payload] "tranCode" 9 "&"]"
     if { [HTTP::payload] contains "EMP_SID" }{
-        log og local5.info "Pe "Persist EMP_SID value is [findstr [HTTP::payload] "EMP_SID" 8 "&"]"
+        #log local5.info "Persist EMP_SID value is [findstr [HTTP::payload] "EMP_SID" 8 "&"]"
         persist uie [findstr [HTTP::payload] "EMP_SID" 8 "&"]
     }
     HTTP::release
-}
-when LB_SELECTED {
-    log og local5.info "Cl "Client LB to ::[LB::server addr]"
 }
 when HTTP_RESPONSE {
     HTTP::collect [HTTP::header value Content-Length]
 }
 when HTTP_RESPONSE_DATA {
-    log og local5.info "Al "All Payload::::[HTTP::payload]"
-    log og local5.info "tr "tranCode: [findstr [HTTP::payload] "tranCode" 9 "</tranCode"]"
+    #log local5.info "All Payload::::[HTTP::payload]"
+    #log local5.info "tranCode: [findstr [HTTP::payload] "tranCode" 9 "</tranCode"]"
     if { [HTTP::payload] contains "EMP_SID" }{
-        log og local5.info "Pe "Persist EMP_SID value is [findstr [HTTP::payload] "EMP_SID" 8 "</EMP_SID"]"
+        #log local5.info "Persist EMP_SID value is [findstr [HTTP::payload] "EMP_SID" 8 "</EMP_SID"]"
         persist add uie [findstr [HTTP::payload] "EMP_SID" 8 "</EMP_SID"] 300
     }
     HTTP::release
