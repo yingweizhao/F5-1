@@ -14,9 +14,14 @@ when HTTP_REQUEST_DATA {
         if { [HTTP::payload] contains "token" }{
             set uid [findstr [HTTP::payload] "userID" 8 ","]
             set tok [findstr [HTTP::payload] "token" 8 ","]
+            log local5.info "Client UserID >>> $uid"
+            log local5.info "Client Token >>> $tok"
             switch [table lookup -notouch -subtable "Security" $uid] {
                 $tok { HTTP::release }
-                default { reject }
+                default {
+                    reject
+                    log local5.info "@UserID >>> $uid@ had wrong @Token >>> $tok@"
+                }
             }
         }
         else {
@@ -38,6 +43,8 @@ when HTTP_RESPONSE_DATA {
     if { [HTTP::payload] contains "userID" }{
         set uid [findstr [HTTP::payload] "userID" 8 ","]
         set tok [findstr [HTTP::payload] "token" 8 ","]
+        log local5.info "Server generate UserID >>> $uid"
+        log local5.info "Server generate Token >>> $tok"
         table set -subtable "Security" $uid $tok $static::timout $static::lifetim
     }
     HTTP::release
