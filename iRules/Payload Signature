@@ -1,0 +1,44 @@
+when RULE_INIT {
+    set static::timout 300
+    set static::lifetim 600
+}
+
+when HTTP_REQUEST {
+    if { [HTTP::header "Content-Type"] contains "json" }{
+        HTTP::collect [HTTP::header value Content-Length]
+    }
+}
+
+when HTTP_REQUEST_DATA {
+    if { [HTTP::payload] contains "userID" }{
+        if { [HTTP::payload] contains "token" }{
+            set uid [findstr [HTTP::payload] "userID" 8 ","]
+            set tok [findstr [HTTP::payload] "token" 8 ","]
+            switch [table lookup -notouch -subtable "Security" $uid] {
+                $tok { HTTP::release }
+                default { reject }
+            }
+        }
+        else {
+            reject
+        }
+    }
+    else {
+        HTTP::release
+    }
+}
+
+when HTTP_RESPONSE {
+    if { [HTTP::header "Content-Type"] contains "json" }{
+        HTTP::collect [HTTP::header value Content-Length]
+    }
+}
+
+when HTTP_RESPONSE_DATA {
+    if { [HTTP::payload] contains "userID" }{
+        set uid [findstr [HTTP::payload] "userID" 8 ","]
+        set tok [findstr [HTTP::payload] "token" 8 ","]
+        table set -subtable "Security" $uid $tok $static::timout $static::lifetim
+    }
+    HTTP::release
+}
