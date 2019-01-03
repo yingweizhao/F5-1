@@ -1,0 +1,10 @@
+when CLIENT_ACCEPTED {
+    if { [matchclass [IP::client_addr] eq monitor_from_LC ] }{
+        if { [active_members [LB::server pool]] < 1 }{
+            reject
+        }
+        else {
+            TCP::respond "Welcome"
+        }
+    }
+}
