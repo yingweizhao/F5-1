@@ -44,4 +44,3 @@ when HTTP_REQUEST {
         HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
       }
     }
-    
