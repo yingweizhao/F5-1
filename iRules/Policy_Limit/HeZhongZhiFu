@@ -31,7 +31,7 @@ when HTTP_REQUEST {
         HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
       }
     }
-    "gateway" {
+    "/merc-gateway-web/*" {
       set n_table "gateway"
       if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
         table incr -subtable $n_table -notouch -mustexist rate
