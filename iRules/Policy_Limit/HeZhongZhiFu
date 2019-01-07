@@ -1,0 +1,47 @@
+when RULE_INIT {
+  set static::m_rate 500
+  set static::time 1
+}
+
+when HTTP_REQUEST {
+  switch [HTTP::uri] {
+    "/merc-payoutgateway-web/*" {
+      set n_table "payoutgateway"
+      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+        table incr -subtable $n_table -notouch -mustexist rate
+      }
+      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
+        table set -subtable $n_table rate 1 inf $static::time
+      }
+      else {
+        set c_rate [table lookup -subtable $n_table -notouch rate]
+        HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+      }
+    }
+    "/cardbind/*" {
+      set n_table "cardbind"
+      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+        table incr -subtable $n_table -notouch -mustexist rate
+      }
+      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
+        table set -subtable $n_table rate 1 inf $static::time
+      }
+      else {
+        set c_rate [table lookup -subtable $n_table -notouch rate]
+        HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+      }
+    }
+    "gateway" {
+      set n_table "gateway"
+      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+        table incr -subtable $n_table -notouch -mustexist rate
+      }
+      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
+        table set -subtable $n_table rate 1 inf $static::time
+      }
+      else {
+        set c_rate [table lookup -subtable $n_table -notouch rate]
+        HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+      }
+    }
+    
