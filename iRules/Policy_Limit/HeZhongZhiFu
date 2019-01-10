@@ -1,47 +1,66 @@
 when RULE_INIT {
-  set static::m_rate 500
+  set static::m_rate1 2000
+  set static::m_rate2 2000
+  set static::m_rate3 2000
   set static::time 1
 }
 
 when HTTP_REQUEST {
-  switch [HTTP::uri] {
-    "/merc-payoutgateway-web/*" {
+  if {[HTTP::uri] starts_with "/merc-payoutgateway-web" }{
       set n_table "payoutgateway"
-      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+      if { [table lookup -subtable $n_table -notouch "rate"] == "" }{
+        table set -subtable $n_table rate 1 indef $static::time
+      }
+      elseif { [table lookup -subtable $n_table -notouch "rate"] <= $static::m_rate1 }{
         table incr -subtable $n_table -notouch -mustexist rate
       }
-      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
-        table set -subtable $n_table rate 1 inf $static::time
-      }
       else {
-        set c_rate [table lookup -subtable $n_table -notouch rate]
+        set c_rate [table lookup -subtable $n_table -notouch "rate"]
         HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+        log local5.info "**********************************************************************"
+        log local5.info "Warning ::: $n_table ::: has exceeded the max rate limit ::: $c_rate**"
+        log local5.info "**********************************************************************"
+        return
       }
-    }
-    "/cardbind/*" {
-      set n_table "cardbind"
-      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+      persist none
+      pool pool-verify-test
+  }
+  elseif {[HTTP::uri] starts_with "/cardbind" }{
+      set n_table "/cardbind"
+      if { [table lookup -subtable $n_table -notouch "rate"] == "" }{
+        table set -subtable $n_table rate 1 indef $static::time
+      }
+      elseif { [table lookup -subtable $n_table -notouch "rate"] <= $static::m_rate2 }{
         table incr -subtable $n_table -notouch -mustexist rate
       }
-      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
-        table set -subtable $n_table rate 1 inf $static::time
-      }
       else {
-        set c_rate [table lookup -subtable $n_table -notouch rate]
+        set c_rate [table lookup -subtable $n_table -notouch "rate"]
         HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+        log local5.info "**********************************************************************"
+        log local5.info "Warning ::: $n_table ::: has exceeded the max rate limit ::: $c_rate**"
+        log local5.info "**********************************************************************"
+        return
       }
-    }
-    "/merc-gateway-web/*" {
+      persist none
+      pool pool-verify-test
+  }    
+  elseif {[HTTP::uri] starts_with "/merc-gateway-web" }{
       set n_table "gateway"
-      if { [table lookup -subtable $n_table -notouch rate] <= $static::m_rate }{
+      if { [table lookup -subtable $n_table -notouch "rate"] == "" }{
+        table set -subtable $n_table rate 1 indef $static::time
+      }
+      elseif { [table lookup -subtable $n_table -notouch "rate"] <= $static::m_rate3 }{
         table incr -subtable $n_table -notouch -mustexist rate
       }
-      elseif { [table lookup -subtable $n_table -notouch rate] == "" }{
-        table set -subtable $n_table rate 1 inf $static::time
-      }
       else {
-        set c_rate [table lookup -subtable $n_table -notouch rate]
+        set c_rate [table lookup -subtable $n_table -notouch "rate"]
         HTTP::respond 456 content "Blocked: $n_table has exceeded the Max Rate Limit ::: $c_rate"
+        log local5.info "**********************************************************************"
+        log local5.info "Warning ::: $n_table ::: has exceeded the max rate limit ::: $c_rate**"
+        log local5.info "**********************************************************************"
+        return
       }
-    }
+      persist none
+      pool pool-verify-test
+  }
 }
