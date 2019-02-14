@@ -1,0 +1,5 @@
+when HTTP_REQUEST {
+    if { [HTTP::header exists X-Forwarded-For] }{
+        HTTP::header insert First-XFF [getfield [HTTP::header X-Forwarded-For] "," 1]
+    }
+}
