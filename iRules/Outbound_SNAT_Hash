@@ -1,0 +1,25 @@
+when CLIENT_ACCEPTED { 
+	if { [class match [IP::local_addr] equals Class_CTC]} { 
+		pool Pool_CTC
+	}
+	elseif { [matchclass [IP::local_addr] equals Class_CNC]} { 
+		pool Pool_CNC
+	}
+		else {
+		pool Pool_default
+	}
+}
+
+when LB_SELECTED {
+	if { [ class match [IP::client_addr] equals internal_class ] } {
+		if {[IP::addr [LB::server addr] equals 222.222.68.193] } {
+			snat [lindex {222.222.68.201 222.222.68.202 222.222.68.203 222.222.68.204 222.222.68.205 222.222.68.206 222.222.68.207 222.222.68.208 222.222.68.209 222.222.68.210 222.222.68.211 222.222.68.214} [expr  [getfield [IP::client_addr] "." 4]%12] ]
+		}
+		elseif {[IP::addr [LB::server addr] equals 60.10.65.65] } {
+			snat [lindex {60.10.65.81 60.10.65.82 60.10.65.83 60.10.65.84 60.10.65.85 60.10.65.86 60.10.65.89} [expr  [getfield [IP::client_addr] "." 4]%7] ]
+		}
+	}
+	else {
+		snat automap
+	}
+}
