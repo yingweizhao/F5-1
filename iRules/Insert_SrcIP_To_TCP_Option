@@ -1,0 +1,6 @@
+when SERVER_CONNECTED {
+  scan [IP::client_addr] {%d.%d.%d.%d} e b c d
+  TCP::option set 29 [binary format cccc $e $b $c $d] all
+  set a [binary format cccc $e $b $c $d]
+  log local0. "insert ip to tcp option $a"
+}
