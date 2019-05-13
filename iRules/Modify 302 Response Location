@@ -1,0 +1,5 @@
+when HTTP_RESPONSE { 
+  if { [HTTP::is_redirect] }{ 
+		HTTP::header replace Location "[string map {"http://" "https://"} [HTTP::header Location]]" 
+	}
+}
