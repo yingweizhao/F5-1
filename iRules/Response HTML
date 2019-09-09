@@ -1,0 +1,5 @@
+when HTTP_REQUEST {
+    if { [LB::status pool SG_Test1] eq "down" } {
+        HTTP::respond 200 content "<html><head><title>Apology</title></head><body>The server is upgrading!<br>Please try again later.<p></body></html>"
+    }
+}
