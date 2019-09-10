@@ -1,0 +1,29 @@
+when CLIENT_ACCEPTED {
+	TCP::collect
+}
+
+when CLIENT_DATA {
+	binary scan [TCP::payload] cSSccSS rtype dumver rlen dum1 dum2 dum3 sslver
+	#TLS1.0 -> 771
+	#TLS1.1 -> 770
+	#TLS1.2 -> 769
+	#SSL3.0 -> 768
+	#SSL2.0 -> 16
+	switch $sslver {
+		771 {
+			reject
+		}
+		770 {
+			forward
+		}
+		769 {
+			forward
+		}
+		768 {
+			reject
+		}
+		16 {
+			reject
+		}
+	}
+}
