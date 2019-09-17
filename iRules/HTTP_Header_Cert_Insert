@@ -1,0 +1,26 @@
+when CLIENTSSL_CLIENTCERT {
+	set cert [SSL::cert 0]
+	if { $cert eq "" } {
+	} else {
+	set client_ssl [X509::subject $cert]
+	session add ssl [SSL::sessionid] "$client_ssl" 600
+}
+}
+when HTTP_REQUEST {
+	set client_cert [session lookup ssl [SSL::sessionid]]
+	#log local0. "the client_cert is $client_cert"
+	if { $client_cert eq "" } {
+        #log local0. " no cert client ip [IP::remote_addr]"
+	HTTP::redirect "https://ebank.xxxxx.com:8080/corporbank/noKeyNotice.html"
+	#SSL::renegotiation
+} else {
+	#set client_ip "[IP::client_addr]"
+	#set client_dn "$client_cert"
+	set client_cn "[findstr $client_cert "CN=" 3 ","]"
+	#log local0. "print the client_ip $client_ip"
+	#log local0. "print the client_dn $client_dn"
+	#log local0. "print the client_cn $client_cn"
+	HTTP::header insert cookie "K_CERT_DN=$client_cert"
+	HTTP::header insert cookie "K_CERT_CN=$client_cn"
+}
+}
