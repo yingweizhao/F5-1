@@ -1,0 +1,6 @@
+when DNS_REQUEST {
+	if { [DNS::question name] contains "a10.example.com" } {
+			 DNS::answer insert [DNS::rr a10.example.com 149 IN A 127.0.0.10]
+			 DNS::return
+	}
+}
