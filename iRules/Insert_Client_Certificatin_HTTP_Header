@@ -1,0 +1,11 @@
+when CLIENTSSL_CLIENTCERT {
+    if { [SSL::cert count] > 0 } {
+        session add ssl [SSL::sessionid] [b64encode [SSL::cert 0]]
+    }
+}
+
+when HTTP_REQUEST {
+    set certification [session lookup ssl [SSL::sessionid]]
+    log "AAAA ::: $certification"
+    HTTP::header insert ssl_client_cert "$certification"
+}
