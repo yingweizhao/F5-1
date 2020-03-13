@@ -4,3 +4,4 @@ when DNS_REQUEST {
 			 DNS::return
 	}
 }
+#a10还用F5啊
